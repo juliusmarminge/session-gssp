@@ -1,8 +1,32 @@
-import { type NextPage } from "next";
+import { type Session } from "next-auth";
+import {
+  type InferGetServerSidePropsType,
+  type GetServerSideProps,
+  type NextPage,
+} from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { getServerAuthSession } from "../server/auth";
 
-const Home: NextPage = () => {
+export const getServerSideProps: GetServerSideProps<{
+  session: Session | null;
+}> = async (ctx) => {
+  const session = await getServerAuthSession(ctx);
+
+  console.log("server", session);
+
+  return {
+    props: {
+      session,
+    },
+  };
+};
+
+const Home: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = (
+  props
+) => {
+  const session = props.session;
+  console.log("client", session);
   return (
     <>
       <Head>
@@ -39,6 +63,16 @@ const Home: NextPage = () => {
               </div>
             </Link>
           </div>
+
+          {session ? (
+            <div className="text-2xl font-bold text-white">
+              You are signed in as {session.user?.email}
+            </div>
+          ) : (
+            <div className="text-2xl font-bold text-white">
+              You are not signed in
+            </div>
+          )}
         </div>
       </main>
     </>
